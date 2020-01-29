@@ -6,10 +6,10 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 
-
-class HTMLScrape {
+class Scraper {
 	
 	public static void main(String[] args) {
+
 		def doc = Jsoup.connect("https://github.com/egis/handbook/blob/master/Tech-Stack.md").get()
 		
 		//Scraping headers
@@ -45,10 +45,8 @@ class HTMLScrape {
 			//println JsonOutput.prettyPrint(JsonOutput.toJson(obj))
 		}
 		
-		
+		println JsonOutput.prettyPrint(JsonOutput.toJson(obj))
 	}
-	
-	
-	}
+}
 
 
