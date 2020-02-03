@@ -11,47 +11,25 @@ import org.jsoup.select.Elements
 class Scraper {
 	private Element information;
 	private Elements headers;
-	private LinkedHashMap techMap ;
-	private ArrayList techList ;
+	private LinkedHashMap techMap 
 	
 	public Scraper(String url) {
 		information = Jsoup.connect(url).get().select("#readme").first()
 		headers = information.select("h2")
 		techMap = new LinkedHashMap<String,ArrayList>()
-		techList = new ArrayList<String>()
 		
 		headers.each { header ->
-			setTechList(header)
-			try {
-				appendToMap(header)
-			}catch(Exception e) {
-				println(e.getMessage())
-			}
+			def techArr = []			
+			def tableRows = header.nextElementSibling().select("tbody").select("tr")
 			
+			
+			tableRows.each { row ->
+				techArr.add(row.select("td").first().text())
+			}
+			techMap.put(header.text(), techArr)
 		}
 	}
 	
-	
-	public void setTechList(Element header) {
-		techList.clear()
-		def tableRows = header.nextElementSibling().select("tbody").select("tr")
-		tableRows.each { row ->
-			techList.add(row.select("td").first().text())
-		}
-	}
-	
-	public void appendToMap(Element header) {
-		if(!checkTechListEmpty()) {
-			techMap.put(header.text(), techList)
-		}
-		else {
-			throw new Exception("Tech list was not initialised")
-		}
-	}
-	
-	public boolean checkTechListEmpty() {
-		return techList.isEmpty()
-	}
 	
 	public void outputTechMapJson() {
 		println( JsonOutput.prettyPrint(JsonOutput.toJson(techMap)) )
