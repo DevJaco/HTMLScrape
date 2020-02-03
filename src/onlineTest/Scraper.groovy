@@ -1,52 +1,65 @@
+
 package onlineTest
 
 import groovy.json.JsonOutput
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
 class Scraper {
+	private Element information;
+	private Elements headers;
+	private LinkedHashMap techMap ;
+	private ArrayList techList ;
+	
+	public Scraper(String url) {
+		information = Jsoup.connect(url).get().select("#readme").first()
+		headers = information.select("h2")
+		techMap = new LinkedHashMap<String,ArrayList>()
+		techList = new ArrayList<String>()
+		
+		headers.each { header ->
+			setTechList(header)
+			try {
+				appendToMap(header)
+			}catch(Exception e) {
+				println(e.getMessage())
+			}
+			
+		}
+	}
+	
+	
+	public void setTechList(Element header) {
+		techList.clear()
+		def tableRows = header.nextElementSibling().select("tbody").select("tr")
+		tableRows.each { row ->
+			techList.add(row.select("td").first().text())
+		}
+	}
+	
+	public void appendToMap(Element header) {
+		if(!checkTechListEmpty()) {
+			techMap.put(header.text(), techList)
+		}
+		else {
+			throw new Exception("Tech list was not initialised")
+		}
+	}
+	
+	public boolean checkTechListEmpty() {
+		return techList.isEmpty()
+	}
+	
+	public void outputTechMapJson() {
+		println( JsonOutput.prettyPrint(JsonOutput.toJson(techMap)) )
+	}
 	
 	public static void main(String[] args) {
 
-		def doc = Jsoup.connect("https://github.com/egis/handbook/blob/master/Tech-Stack.md").get()
-		
-		//Scraping headers
-		def block = doc.select("#readme").first()
-		def headers = block.select("h2")
-		
-		//Map in order to store the information for JSON output
-		
-		def obj = [:]
-		
-		headers.each { header -> 
-			
-			//Array in order to hold the list of technologies
-			
-			
-			def techlist = []
-			
-			//println(header.text())
-			//println()
-			
-			//A table always follows a header and therefore we can use the nextElementSibling function
-			def table = header.nextElementSibling()
-			def tableRows = table.select("tbody").select("tr")
-			
-			//Adding the tech to the array
-			tableRows.each { row ->
-				techlist.add(row.select("td").first().text())
-				//println(row.select("td").first().text())
-			
-			}
-			
-			obj.put(header.text(), techlist)
-			//println JsonOutput.prettyPrint(JsonOutput.toJson(obj))
-		}
-		
-		println JsonOutput.prettyPrint(JsonOutput.toJson(obj))
+		def scraper = new Scraper("https://github.com/egis/handbook/blob/master/Tech-Stack.md")
+		scraper.outputTechMapJson()
 	}
 }
-
-
